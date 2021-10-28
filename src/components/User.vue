@@ -6,7 +6,7 @@
             <a href="#" class="btn py-3">Dashboard</a>
           </div>
           <div class="col-6">
-            <a href="#" class="btn py-3" data-bs-toggle="modal" data-bs-target="#ModalUser">Create User</a>
+            <a href="#" class="btn py-3" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="addUser">Create User</a>
           </div>
         </div>
         <div class="row d-flex justify-content-center">
@@ -14,29 +14,31 @@
             <p class="title-user ">All Users</p>
           </div>
         </div>
-        <table class="table">
-          <thead>
-            <tr>
-              <th scope="col">Username</th>
-              <th scope="col">Options</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="user in users" v-bind:key="user.id">
-              <td>{{user.username}}</td>
-              <td class="d-flex justify-content-center">
-                <i class="far fa-edit me-2" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="editUser(user.id)"></i>
-                <i class="fas fa-trash" v-on:click="deleteUser(user.id)"></i>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="tabUser">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Username</th>
+                <th scope="col">Options</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in users" v-bind:key="user.id">
+                <td>{{user.username}}</td>
+                <td class="d-flex justify-content-center">
+                  <i class="far fa-edit me-2" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="editUser(user.id)"></i>
+                  <i class="fas fa-trash" v-on:click="deleteUser(user.id)"></i>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <div class="modal fade" id="ModalUser" tabindex="-1" aria-labelledby="ModalUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="ModalUserLabel">{{ titleModal }}</h5>
+              <h5 class="modal-title" id="ModalUserLabel">{{ titleModal }} User</h5>
               <button type="button" id="modalBtnClose" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -53,7 +55,8 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn" v-on:click="resetInput">Reset</button>
-              <button type="button" class="btn" v-on:click="createUser">Create</button>
+              <button type="button" class="btn" v-if="titleModal == 'Create'" v-on:click="createUser">{{titleModal}}</button>
+              <button type="button" class="btn" v-if="titleModal == 'Update'" v-on:click="updateUser">{{titleModal}}</button>
             </div>
           </div>
         </div>
@@ -68,7 +71,7 @@ export default {
   data () {
     return {
       users: {},
-      titleModal: "Create User",
+      titleModal: "Create",
       email_input: "",
       username_input: "",
       id_input: -1
@@ -78,8 +81,28 @@ export default {
     this.getUser();
   },
   methods: {
+    updateUser () {
+      const object = { "user": {
+        "username": this.username_input,
+        "email": this.email_input
+        }
+      };
+      console.log(JSON.stringify(object));
+      var myInit = { method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        mode: 'cors',
+        body: JSON.stringify(object),
+        cache: 'default' };
+      
+      fetch("http://127.0.0.1:4000/api/users/"+this.id_input, myInit)
+      .then(res => {
+          if (res.ok) {
+            document.getElementById("modalBtnClose").click()
+          }
+        }).then(this.getUser)
+    },
     editUser (userId) {
-      this.titleModal = "Update User";
+      this.titleModal = "Update";
       this.id_input = userId;
       var username;
       var email;
@@ -91,6 +114,12 @@ export default {
       });
       this.username_input = username;
       this.email_input = email;
+    },
+    addUser () {
+      this.username_input = "";
+      this.email_input = "";
+      this.id_input = -1;
+      this.titleModal = "Create"
     },
     createUser () {
       const object = { "user": {
@@ -148,6 +177,28 @@ export default {
 </script>
 
 <style >
+.userList .tabUser::-webkit-scrollbar-track
+{
+	border-radius: 10px;
+	background-color: #39697b;
+}
+
+.userList .tabUser::-webkit-scrollbar
+{
+	width: 9px;
+	background-color: #39697b;
+}
+
+.userList .tabUser::-webkit-scrollbar-thumb
+{
+	border-radius: 10px;
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+	background-color: #296172;
+}
+.userList .tabUser{
+  overflow-y: auto;
+  height: 33em;
+}
 .userList .container{
   background-color: #39697b;
   width: 20em;
