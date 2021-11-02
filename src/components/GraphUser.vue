@@ -1,22 +1,15 @@
 <template>
   <div class="graphUser">
-    <div class="row menu d-flex justify-content-center">
-      <div class="col-auto d-flex align-items-center justify-content-center">
-        <router-link :to="'/graph/'+$route.params.userId" class="btn py-3">Statistics</router-link>
-      </div>
-      <div class="col-auto d-flex align-items-center justify-content-center ms-5 me-5">
-        <router-link :to="'/workingtimes/'+$route.params.userId" class="btn py-3">Working Times</router-link>
-      </div>
-      <div class="col-auto d-flex align-items-center justify-content-center">
-        <router-link :to="'#'" class="btn py-3">Edit Statistics</router-link>
-      </div>
-    </div>
+    <Nav/>
   </div>
 </template>
 
 <script>
+import Nav from './Nav.vue'
 export default {
-  
+  components: {
+    Nav
+  }
 }
 </script>
 

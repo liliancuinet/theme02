@@ -1,16 +1,6 @@
 <template>
   <div class="WorkingtimeUser">
-    <div class="row menu d-flex justify-content-center">
-      <div class="col-auto d-flex align-items-center justify-content-center">
-        <router-link :to="'/graph/'+$route.params.userId" class="btn py-3">Statistics</router-link>
-      </div>
-      <div class="col-auto d-flex align-items-center justify-content-center ms-5 me-5">
-        <router-link :to="'/workingtimes/'+$route.params.userId" class="btn py-3">Working Times</router-link>
-      </div>
-      <div class="col-auto d-flex align-items-center justify-content-center">
-        <a href="#" class="btn py-3" data-bs-toggle="modal" data-bs-target="#ModalWorkingTime">Create WorkingTimes</a>
-      </div>
-    </div>
+    <Nav/>
     <div class="">
       <div class="row mt-5">
         <h3>WorkingTime's N°{{ $route.params.workingtimeid }}</h3>
@@ -92,9 +82,13 @@
 </template>
 
 <script>
+import Nav from './Nav.vue'
 export default {
   name: 'WorkingTime',
   props: {},
+  components: {
+    Nav
+  },
   data () {
     return {
       workingtime: {},
@@ -112,8 +106,6 @@ export default {
   methods: {
     deleteWorkingtime () {
       var myHeaders = new Headers();
-      var userid = this.$route.params.userId;
-      var router = this.$router;
 
       var myInit = { method: 'DELETE',
         headers: myHeaders,
@@ -121,7 +113,7 @@ export default {
         cache: 'default' };
 
       fetch("http://127.0.0.1:4000/api/workingtimes/"+this.$route.params.workingtimeid, myInit)
-      .then(router.replace("/workingtimes/"+userid));
+      .then(this.$router.push("/workingtimes/"+this.$route.params.userId));
     },
     updateWorkingTime () {
       const object = { "working_time": {

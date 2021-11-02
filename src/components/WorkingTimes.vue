@@ -1,53 +1,43 @@
 <template>
   <div class="WorkingtimesUser">
-    <div class="row menu d-flex justify-content-center">
-      <div class="col-auto d-flex align-items-center justify-content-center">
-        <router-link :to="'/graph/'+$route.params.userId" class="btn py-3">Statistics</router-link>
-      </div>
-      <div class="col-auto d-flex align-items-center justify-content-center ms-5 me-5">
-        <router-link :to="'/workingtimes/'+$route.params.userId" class="btn py-3">Working Times</router-link>
-      </div>
-      <div class="col-auto d-flex align-items-center justify-content-center">
-        <a href="#" class="btn py-3" data-bs-toggle="modal" data-bs-target="#ModalWorkingTime">Create WorkingTimes</a>
-      </div>
-    </div>
+    <Nav/>
     <div class="ms-5">
       <table>
         <thead>
           <tr>
             <th class="hours"></th>
             <th>
-              <span class="day">1</span>
+              <span class="day">{{ date[0] }}</span>
               <span class="long">Monday</span>
               <span class="short">Mon</span>
             </th>
             <th>
-              <span class="day">2</span>
+              <span class="day">{{ date[1] }}</span>
               <span class="long">Tuesday</span>
               <span class="short">Tue</span>
             </th>
             <th>
-              <span class="day">3</span>
-              <span class="long">Wendsday</span>
+              <span class="day">{{ date[2] }}</span>
+              <span class="long">Wednesday</span>
               <span class="short">We</span>
             </th>
             <th>
-              <span class="day">4</span>
+              <span class="day">{{ date[3] }}</span>
               <span class="long">Thursday</span>
               <span class="short">Thur</span>
             </th>
             <th>
-              <span class="day active">5</span>
+              <span class="day">{{ date[4] }}</span>
               <span class="long">Friday</span>
               <span class="short">Fri</span>
             </th>
             <th>
-              <span class="day">6</span>
+              <span class="day">{{ date[5] }}</span>
               <span class="long">Saturday</span>
               <span class="short">Sat</span>
             </th>
             <th>
-              <span class="day">7</span>
+              <span class="day">{{ date[6] }}</span>
               <span class="long">Sunday</span>
               <span class="short">Sun</span>
             </th>
@@ -67,7 +57,7 @@
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
-              <h5 class="modal-title" id="ModalUserLabel">Create WorkingTimes</h5>
+              <h5 class="modal-title" id="ModalUserLabel">Create Working Times</h5>
               <button type="button" id="modalBtnCloseWT" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -93,19 +83,32 @@
 </template>
 
 <script>
+import Nav from './Nav.vue'
 export default {
   name: 'WorkingTimes',
   props: {},
+  components: {
+    Nav
+  },
   data () {
     return {
       workingtimes: {},
       tableau: [],
       start_input: "",
-      end_input: ""
+      end_input: "",
+      date: [],
+      test: 0
     }
   },
   created: function () {
     this.getWorkingTimes();
+    this.test = 0;
+  },
+  updated: function () {
+    if (this.test==0) {
+      this.getWorkingTimes();
+      this.test=1;
+    }
   },
   methods: {
     goToWT (wtId) {
@@ -118,6 +121,14 @@ export default {
       var curr2 = new Date; // get current date
       var first = curr.getDate() - curr.getDay() + 1; // First day is the day of the month - the day of the week
       var last = curr.getDate() - curr.getDay() + 7; // last day is the first day + 6
+      this.date = new Array(7);
+
+      for (let i = 1; i < 8; i++) {
+        var curr3 = new Date;
+        var jour = curr.getDate() - curr.getDay() + i;
+        var thedate = new Date(curr3.setDate(jour));
+        this.date[i-1] = thedate.getDate();
+      }
 
       var firstday = new Date(curr.setDate(first)).toISOString().split("T")[0]+" 00:00:00";
       var lastday = new Date(curr2.setDate(last)).toISOString().split("T")[0]+" 23:59:59";
@@ -158,7 +169,6 @@ export default {
             for (let h = 0; h < hours; h++) {
               let h2 = (hdebut.getHours()+h) %24;
               let i2 = i + ((hdebut.getHours()+h-h2) /24);
-              console.log("h: "+h+" h2: "+ h2 + " i2: "+ i2);
               this.tableau[h2][i2].bool = true;
               this.tableau[h2][i2].id = workingtime.id;
               if (h == 0) {
