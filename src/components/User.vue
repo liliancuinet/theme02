@@ -3,7 +3,7 @@
       <div class="container m-4">
         <div class="row d-flex justify-content-center mt-3">
           <div class="col-6">
-            <a href="#" class="btn py-3">Dashboard</a>
+            <router-link :to="'/'" class="btn py-3">Dashboard</router-link>
           </div>
           <div class="col-6">
             <a href="#" class="btn py-3" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="addUser">Create User</a>
@@ -19,15 +19,31 @@
             <thead>
               <tr>
                 <th scope="col">Username</th>
-                <th scope="col">Options</th>
+                <th scope="col" colspan="2">Options</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="user in users" v-bind:key="user.id">
-                <td>{{user.username}}</td>
-                <td class="d-flex justify-content-center">
-                  <i class="far fa-edit me-2" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="editUser(user.id)"></i>
-                  <i class="fas fa-trash" v-on:click="deleteUser(user.id)"></i>
+                <td class="ps-0 pe-0">
+                  <router-link :to="'/graph/'+user.id" class="link-graph-user">
+                    <div style="height:100%;width:100%">
+                      {{user.username}}
+                    </div>
+                  </router-link>
+                </td>
+                <td class="ps-0 pe-0">
+                  <a href="#" class="link-graph-user">
+                    <div style="height:100%;width:100%" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="editUser(user.id)">
+                      <i class="far fa-edit"></i>
+                    </div>
+                  </a>
+                </td>
+                <td class="ps-0 pe-0">
+                  <a href="#" class="link-graph-user">
+                    <div style="height:100%;width:100%" v-on:click="deleteUser(user.id)">
+                      <i class="fas fa-trash"></i>
+                    </div>
+                  </a>
                 </td>
               </tr>
             </tbody>
@@ -177,6 +193,10 @@ export default {
 </script>
 
 <style >
+.userList .link-graph-user{
+  text-decoration: none;
+  color: #e7e7e7;
+}
 .userList .tabUser::-webkit-scrollbar-track
 {
 	border-radius: 10px;
@@ -192,6 +212,7 @@ export default {
 .userList .tabUser::-webkit-scrollbar-thumb
 {
 	border-radius: 10px;
+  box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 	background-color: #296172;
 }
@@ -203,7 +224,7 @@ export default {
   background-color: #39697b;
   width: 20em;
   height: 44em;
-  border: solid 2px #1b3b5e;
+  border: solid 2px #39697b;
 }
 .userList .btn{
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;

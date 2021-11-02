@@ -2,6 +2,7 @@
   <div id="app">
     <div class="row">
       <div class="col-9">
+        <router-view></router-view>
       </div>
       <div class="col-3 d-flex justify-content-end">
         <User/>
