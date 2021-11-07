@@ -1,11 +1,15 @@
 <template>
   <div class="WorkingtimesUser">
     <Nav/>
-    <div class="ms-5">
+    <div class="ms-5" v-if="user_role_connected != 'user'">
       <table>
         <thead>
           <tr>
-            <th class="hours"></th>
+            <th class="hours">
+              <a href="#" class="btn" id="openModalWTN" data-bs-toggle="modal" data-bs-target="#ModalWorkingTime">
+                <i class="fas fa-plus"></i>
+              </a>
+            </th>
             <th>
               <span class="day">{{ date[0] }}</span>
               <span class="long">Monday</span>
@@ -53,6 +57,59 @@
         </tbody>
       </table>
     </div>
+    <div class="ms-5" v-if="user_role_connected == 'user'">
+      <table>
+        <thead>
+          <tr>
+            <th class="hours">
+            </th>
+            <th>
+              <span class="day">{{ date[0] }}</span>
+              <span class="long">Monday</span>
+              <span class="short">Mon</span>
+            </th>
+            <th>
+              <span class="day">{{ date[1] }}</span>
+              <span class="long">Tuesday</span>
+              <span class="short">Tue</span>
+            </th>
+            <th>
+              <span class="day">{{ date[2] }}</span>
+              <span class="long">Wednesday</span>
+              <span class="short">We</span>
+            </th>
+            <th>
+              <span class="day">{{ date[3] }}</span>
+              <span class="long">Thursday</span>
+              <span class="short">Thur</span>
+            </th>
+            <th>
+              <span class="day">{{ date[4] }}</span>
+              <span class="long">Friday</span>
+              <span class="short">Fri</span>
+            </th>
+            <th>
+              <span class="day">{{ date[5] }}</span>
+              <span class="long">Saturday</span>
+              <span class="short">Sat</span>
+            </th>
+            <th>
+              <span class="day">{{ date[6] }}</span>
+              <span class="long">Sunday</span>
+              <span class="short">Sun</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(row, index) in tableau" v-bind:key="index">
+            <td class="hour"><span>{{ index }}:00</span></td>
+            <td v-for="(item, index2) in row" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
+              <span> {{ item.data }} </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <div class="modal fade" id="ModalWorkingTime" tabindex="-1" aria-labelledby="ModalUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -83,7 +140,7 @@
 </template>
 
 <script>
-import Nav from './Nav.vue'
+import Nav from "./Nav.vue";
 export default {
   name: 'WorkingTimes',
   props: {},
@@ -97,23 +154,37 @@ export default {
       start_input: "",
       end_input: "",
       date: [],
-      test: 0
+      reload: 0,
+      user_id_connected: -1,
+      user_role_connected: ""
     }
   },
-  created: function () {
-    this.getWorkingTimes();
-    this.test = 0;
+  mounted: function () {
+    if (localStorage.user_role) {
+      this.user_role_connected = localStorage.user_role;
+      this.user_id_connected = localStorage.user_id;
+      if (this.user_role_connected == "user" && this.$route.params.userId != this.user_id_connected) {
+        this.$router.push("/workingtimes/"+this.user_id_connected);
+        console.log("ICI");
+      }
+      this.getWorkingTimes();
+      this.reload = 0;
+    }else{
+      this.$router.push("/login");
+    }
   },
   updated: function () {
-    if (this.test==0) {
+    if (this.reload==0) {
       this.getWorkingTimes();
-      this.test=1;
+      this.reload=1;
     }
   },
   methods: {
     goToWT (wtId) {
       if (wtId!=-1) {
-        this.$router.push(`/workingtime/${this.$route.params.userId}/${wtId}`)
+        this.$router.push({ path: `/workingtime/${this.$route.params.userId}/${wtId}` })
+      }else{
+        document.getElementById("openModalWTN").click();
       }
     },
     getWorkingTimes () {
@@ -127,16 +198,20 @@ export default {
         var curr3 = new Date;
         var jour = curr.getDate() - curr.getDay() + i;
         var thedate = new Date(curr3.setDate(jour));
-        this.date[i-1] = thedate.getDate();
+        if (thedate.getDate() < 10) {
+          this.date[i-1] = "0"+thedate.getDate()+"/"+thedate.getMonth();
+        }else{
+          this.date[i-1] = thedate.getDate()+"/"+thedate.getMonth();
+        }
+        
       }
 
       var firstday = new Date(curr.setDate(first)).toISOString().split("T")[0]+" 00:00:00";
       var lastday = new Date(curr2.setDate(last)).toISOString().split("T")[0]+" 23:59:59";
 
-      var myHeaders = new Headers();
 
       var myInit = { method: 'GET',
-        headers: myHeaders,
+        headers: {'Authorization': localStorage.token},
         mode: 'cors',
         cache: 'default' };
 
@@ -154,34 +229,42 @@ export default {
           this.tableau[i][j] = {"bool": false, "data": "", "id": -1};
         }
       }
-      console.log(this.workingtimes);
       for (let i = 0; i < 7; i++) {
         var curr = new Date;
         var jour = curr.getDate() - curr.getDay() + i + 1;
         curr.setDate(jour);
-        this.workingtimes.forEach(workingtime => {
-          var workingtimeStart = new Date(workingtime.start)
-          if (curr.getDate() == workingtimeStart.getDate()) {
-            var hdebut = new Date(workingtime.start);
-            var hfin = new Date(workingtime.end);
-            let diffInMilliSeconds = Math.abs(hfin - hdebut) / 1000;
-            const hours = Math.floor(diffInMilliSeconds / 3600);
-            for (let h = 0; h < hours; h++) {
-              let h2 = (hdebut.getHours()+h) %24;
-              let i2 = i + ((hdebut.getHours()+h-h2) /24);
-              this.tableau[h2][i2].bool = true;
-              this.tableau[h2][i2].id = workingtime.id;
-              if (h == 0) {
-                this.tableau[h2][i2].data = hdebut.getHours()+":00";
-              }
-              if (h == hours - 1) {
-                this.tableau[h2][i2].data = hfin.getHours()+":00";
+        if (this.workingtimes!=undefined) {
+          this.workingtimes.forEach(workingtime => {
+            var workingtimeStart = new Date(workingtime.start)
+            if (curr.getDate() == workingtimeStart.getDate()) {
+              var hdebut = new Date(workingtime.start);
+              var hfin = new Date(workingtime.end);
+              let diffInMilliSeconds = Math.abs(hfin - hdebut) / 1000;
+              const hours = Math.floor(diffInMilliSeconds / 3600);
+              for (let h = 0; h < hours; h++) {
+                let h2 = (hdebut.getHours()+h) %24;
+                let i2 = i + ((hdebut.getHours()+h-h2) /24);
+                this.tableau[h2][i2].bool = true;
+                this.tableau[h2][i2].id = workingtime.id;
+                if (h == 0) {
+                  let minute = hdebut.getMinutes();
+                  if (minute < 10) {
+                    minute = "0" + minute;
+                  }
+                  this.tableau[h2][i2].data = hdebut.getHours()+":"+minute;
+                }
+                if (h == hours - 1) {
+                  let minute = hfin.getMinutes();
+                  if (minute < 10) {
+                    minute = "0" + minute;
+                  }
+                  this.tableau[h2][i2].data = hfin.getHours()+":"+minute;
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
-      console.log(this.tableau);
     },
     resetInput (){
       this.start_input = "";
@@ -193,8 +276,9 @@ export default {
         "end": this.end_input+":00"
         }
       };
+      console.log(object);
       var myInit = { method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
         body: JSON.stringify(object),
         cache: 'default' };
@@ -234,7 +318,7 @@ export default {
   background-color: #4f76a0;
 }
 .WorkingtimesUser .working {
-  background-color: blue;
+  background-color: #4d99b6;
   color: black;
   font-size: 13px;
   cursor: pointer;
@@ -255,6 +339,9 @@ export default {
 }
 .WorkingtimesUser table thead tr th.hours {
   width: 4em;
+}
+.WorkingtimesUser table thead tr th.hours i {
+  font-size: 1em;
 }
 .WorkingtimesUser table thead tr th:first-child {
   border-radius:3px 0 0 0;

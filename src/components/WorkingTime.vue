@@ -1,7 +1,7 @@
 <template>
   <div class="WorkingtimeUser">
     <Nav/>
-    <div class="">
+    <div class="mt-7 ms-5">
       <div class="row mt-5">
         <h3>WorkingTime's N°{{ $route.params.workingtimeid }}</h3>
       </div>
@@ -9,7 +9,8 @@
         <div class="col-6">
           <h5>User's informations</h5>
           <p class="mt-4 mb-1">Username: {{ user.username }}</p>
-          <p class="mt-1">Email: {{ user.email }}</p>
+          <p class="mt-1 mb-1">Email: {{ user.email }}</p>
+          <p class="mt-1">Role: {{ user.role }}</p>
         </div>
         <div class="col-6">
           <h5>WorkingTime's informations</h5>
@@ -22,33 +23,7 @@
           <a href="#" class="btn py-3" data-bs-toggle="modal" data-bs-target="#ModalWorkingTimeUpdate">Update WorkingTime</a>
         </div>
         <div class="col-auto d-flex align-items-center justify-content-center">
-          <btn class="btn py-3" v-on:click="deleteWorkingtime">Delete WorkingTime</btn>
-        </div>
-      </div>
-    </div>
-    <div class="modal fade" id="ModalWorkingTime" tabindex="-1" aria-labelledby="ModalUserLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="ModalUserLabel">Create WorkingTimes</h5>
-            <button type="button" id="modalBtnCloseWT" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form>
-              <div class="mb-3">
-                <label for="startdate" class="form-label">Start :</label>
-                <input type="datetime-local" class="form-control" id="startdate" v-model="start_input">
-              </div>
-              <div class="mb-3">
-                <label for="startend" class="form-label">End :</label>
-                <input type="datetime-local" class="form-control" id="startend" v-model="end_input">
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn" v-on:click="resetInput">Reset</button>
-            <button type="button" class="btn" v-on:click="createWorkingTime">Create</button>
-          </div>
+          <button class="btn py-3" v-on:click="deleteWorkingtime">Delete WorkingTime</button>
         </div>
       </div>
     </div>
@@ -82,7 +57,7 @@
 </template>
 
 <script>
-import Nav from './Nav.vue'
+import Nav from "./Nav.vue";
 export default {
   name: 'WorkingTime',
   props: {},
@@ -96,19 +71,30 @@ export default {
       start_input: "",
       end_input: "",
       start_update_input: "",
-      end_update_input: ""
+      end_update_input: "",
+      user_id_connected: -1,
+      user_role_connected: ""
     }
   },
   created: function () {
-    this.getWorkingTime();
-    this.getUser();
+    if (localStorage.user_role) {
+      this.user_role_connected = localStorage.user_role;
+      this.user_id_connected = localStorage.user_id;
+      if (localStorage.user_role == "user") {
+        this.$router.push("/workingtimes/"+this.user_id_connected);
+      }else{
+        this.getWorkingTime();
+        this.getUser();
+      }
+    }else{
+      this.$router.push("/login");
+    }
   },
   methods: {
     deleteWorkingtime () {
-      var myHeaders = new Headers();
 
       var myInit = { method: 'DELETE',
-        headers: myHeaders,
+        headers: { 'Authorization': localStorage.token },
         mode: 'cors',
         cache: 'default' };
 
@@ -123,7 +109,7 @@ export default {
       };
       console.log(JSON.stringify(object));
       var myInit = { method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
         body: JSON.stringify(object),
         cache: 'default' };
@@ -136,10 +122,9 @@ export default {
         }).then(this.getWorkingTime)
     },
     getUser () {
-      var myHeaders = new Headers();
 
       var myInit = { method: 'GET',
-        headers: myHeaders,
+        headers: { 'Authorization': localStorage.token },
         mode: 'cors',
         cache: 'default' };
 
@@ -153,10 +138,9 @@ export default {
       console.log(this.user);
     },
     getWorkingTime () {
-      var myHeaders = new Headers();
 
       var myInit = { method: 'GET',
-        headers: myHeaders,
+        headers: { 'Authorization': localStorage.token },
         mode: 'cors',
         cache: 'default' };
 
@@ -178,34 +162,18 @@ export default {
     resetInput (){
       this.start_input = "";
       this.end_input = "";
-    },
-    createWorkingTime () {
-      const object = { "working_time": {
-        "start": this.start_input+":00",
-        "end": this.end_input+":00"
-        }
-      };
-      var myInit = { method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        mode: 'cors',
-        body: JSON.stringify(object),
-        cache: 'default' };
-      
-      fetch("http://127.0.0.1:4000/api/workingtimes/"+this.$route.params.userId, myInit)
-      .then(res => {
-          if (res.ok) {
-            document.getElementById("modalBtnCloseWT").click()
-          }
-        }).then(this.getWorkingTimes)
     }
   }
 }
 </script>
 
 <style>
+.WorkingtimeUser .mt-7{
+  margin-top: 7em;
+}
 .WorkingtimeUser .modal-body input{
   background-color: #596869;
-  color: #e7e7e7;;
+  color: #e7e7e7;
 }
 .WorkingtimeUser .modal-body ::placeholder{
   color: #e7e7e7;
