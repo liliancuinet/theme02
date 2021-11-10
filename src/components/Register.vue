@@ -33,6 +33,7 @@
 </template>
 
 <script>
+var sha256 = require('js-sha256').sha256;
 export default {
   name: 'Register',
   data () {
@@ -43,7 +44,7 @@ export default {
     }
   },
   beforeCreate() {
-    if (!localStorage.user_role) {
+    if (localStorage.token) {
       this.$router.push("/");
     }
   },
@@ -52,10 +53,12 @@ export default {
       this.$router.push("/login")
     },
     createUser() {
+      sha256(this.pwd_input);
+      var hash = sha256.create();
       const object = { "user": {
         "username": this.username_input,
         "email": this.email_input,
-        "password": this.pwd_input,
+        "password": hash.hex(),
         "role": "user"
         }
       };

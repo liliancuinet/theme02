@@ -1,61 +1,60 @@
 <template>
   <div class="WorkingtimesUser">
     <Nav/>
-    <div class="ms-5" v-if="user_role_connected != 'user'">
-      <table>
-        <thead>
-          <tr>
-            <th class="hours">
-              <a href="#" class="btn" id="openModalWTN" data-bs-toggle="modal" data-bs-target="#ModalWorkingTime">
-                <i class="fas fa-plus"></i>
-              </a>
-            </th>
-            <th>
-              <span class="day">{{ date[0] }}</span>
-              <span class="long">Monday</span>
-              <span class="short">Mon</span>
-            </th>
-            <th>
-              <span class="day">{{ date[1] }}</span>
-              <span class="long">Tuesday</span>
-              <span class="short">Tue</span>
-            </th>
-            <th>
-              <span class="day">{{ date[2] }}</span>
-              <span class="long">Wednesday</span>
-              <span class="short">We</span>
-            </th>
-            <th>
-              <span class="day">{{ date[3] }}</span>
-              <span class="long">Thursday</span>
-              <span class="short">Thur</span>
-            </th>
-            <th>
-              <span class="day">{{ date[4] }}</span>
-              <span class="long">Friday</span>
-              <span class="short">Fri</span>
-            </th>
-            <th>
-              <span class="day">{{ date[5] }}</span>
-              <span class="long">Saturday</span>
-              <span class="short">Sat</span>
-            </th>
-            <th>
-              <span class="day">{{ date[6] }}</span>
-              <span class="long">Sunday</span>
-              <span class="short">Sun</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in tableau" v-bind:key="index">
-            <td class="hour"><span>{{ index }}:00</span></td>
-            <td v-for="(item, index2) in row" v-on:click="goToWT(item.id)" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
-              <span> {{ item.data }} </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="ms-5 row" v-if="user_role_connected != 'user'">
+      <div class="col-1 d-flex align-items-center divdivchevron">
+        <div class="btn p-2 bd-highlight bla d-flex align-items-center justify-content-center" v-on:click="removeWeek">
+          <i class="fas fa-chevron-circle-left chevron" style="color: #e7e7e7"></i>
+        </div>
+      </div>
+      <div class="col-10">
+        <input type="date" class="form-control" v-on:change="selectWeek" v-model="calendar_choose">
+        <table>
+          <thead>
+            <tr>
+              <th class="hours">
+                <a href="#" style="display: none" id="openModalWTN" data-bs-toggle="modal" data-bs-target="#ModalWorkingTime">
+                  <i class="fas fa-plus"></i>
+                </a>
+              </th>
+              <th>
+                <span class="day">Mon {{ date[0] }}</span>
+              </th>
+              <th>
+                <span class="day">Tue {{ date[1] }}</span>
+              </th>
+              <th>
+                <span class="day">We {{ date[2] }}</span>
+              </th>
+              <th>
+                <span class="day">Thur {{ date[3] }}</span>
+              </th>
+              <th>
+                <span class="day">Fri {{ date[4] }}</span>
+              </th>
+              <th>
+                <span class="day">Sat {{ date[5] }}</span>
+              </th>
+              <th>
+                <span class="day">Sun {{ date[6] }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in tableau" v-bind:key="index">
+              <td class="hour"><span>{{ index }}:00</span></td>
+              <td v-for="(item, index2) in row" v-on:click="goToWT(item.id)" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
+                <span> {{ item.data }} </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-1 d-flex align-items-center divdivchevron">
+        <div class="btn p-2 bd-highlight bla d-flex align-items-center justify-content-center" v-on:click="addWeek">
+          <i class="fas fa-chevron-circle-right chevron" style="color: #e7e7e7"></i>
+        </div>
+      </div>
     </div>
     <div class="ms-5" v-if="user_role_connected == 'user'">
       <table>
@@ -140,6 +139,7 @@
 </template>
 
 <script>
+import jwt_decode from "jwt-decode";
 import Nav from "./Nav.vue";
 export default {
   name: 'WorkingTimes',
@@ -156,13 +156,16 @@ export default {
       date: [],
       reload: 0,
       user_id_connected: -1,
-      user_role_connected: ""
+      user_role_connected: "",
+      week_choose: 0,
+      calendar_choose: ""
     }
   },
   mounted: function () {
-    if (localStorage.user_role) {
-      this.user_role_connected = localStorage.user_role;
-      this.user_id_connected = localStorage.user_id;
+    if (localStorage.token) {
+      var decoded = jwt_decode(localStorage.token);
+      this.user_role_connected = decoded.user_role;
+      this.user_id_connected = decoded.user_id;
       if (this.user_role_connected == "user" && this.$route.params.userId != this.user_id_connected) {
         this.$router.push("/workingtimes/"+this.user_id_connected);
         console.log("ICI");
@@ -180,6 +183,37 @@ export default {
     }
   },
   methods: {
+    selectWeek () {
+      var selectdate = new Date(this.calendar_choose);
+      var first1 = selectdate.getDate() - selectdate.getDay() + 1
+      var now = new Date;
+      var first2 = now.getDate() - now.getDay() + 1
+      var selectdate2 = new Date(selectdate.setDate(first1))
+      var now2 = new Date(now.setDate(first2))
+      let diffInMilliSeconds = (selectdate2 - now2) / 1000;
+      console.log(diffInMilliSeconds);
+      if (diffInMilliSeconds>=0) {
+        const week = Math.floor(diffInMilliSeconds / 86400) % 6;
+        diffInMilliSeconds -= week*86400
+        const week2 = Math.floor(diffInMilliSeconds / 86400) / 6;
+        this.week_choose = week2;
+      }else{
+        const week = Math.floor(diffInMilliSeconds / 86400) % 6;
+        diffInMilliSeconds -= week*86400
+        var week2 = Math.floor(diffInMilliSeconds / 86400) / 6;
+        console.log(week2);
+        this.week_choose = week2;
+      }
+      this.getWorkingTimes();
+    },
+    addWeek () {
+      this.week_choose = this.week_choose + 1;
+      this.getWorkingTimes();
+    },
+    removeWeek () {
+      this.week_choose = this.week_choose - 1;
+      this.getWorkingTimes();
+    },
     goToWT (wtId) {
       if (wtId!=-1) {
         this.$router.push({ path: `/workingtime/${this.$route.params.userId}/${wtId}` })
@@ -190,18 +224,24 @@ export default {
     getWorkingTimes () {
       var curr = new Date;
       var curr2 = new Date; // get current date
-      var first = curr.getDate() - curr.getDay() + 1; // First day is the day of the month - the day of the week
-      var last = curr.getDate() - curr.getDay() + 7; // last day is the first day + 6
+      var first = curr.getDate() - curr.getDay() + 1 + ( this.week_choose * 7 ); // First day is the day of the month - the day of the week
+      var last = curr.getDate() - curr.getDay() + 7 + ( this.week_choose * 7 ); // last day is the first day + 6
       this.date = new Array(7);
 
       for (let i = 1; i < 8; i++) {
         var curr3 = new Date;
-        var jour = curr.getDate() - curr.getDay() + i;
+        var jour = curr.getDate() - curr.getDay() + i + ( this.week_choose * 7 );
         var thedate = new Date(curr3.setDate(jour));
-        if (thedate.getDate() < 10) {
-          this.date[i-1] = "0"+thedate.getDate()+"/"+thedate.getMonth();
+        var month = "";
+        if (thedate.getMonth()+1 < 10) {
+          month = "0"+(thedate.getMonth()+1);
         }else{
-          this.date[i-1] = thedate.getDate()+"/"+thedate.getMonth();
+          month = ""+(thedate.getMonth()+1);
+        }
+        if (thedate.getDate() < 10) {
+          this.date[i-1] = "0"+thedate.getDate()+"/"+month;
+        }else{
+          this.date[i-1] = thedate.getDate()+"/"+month;
         }
         
       }
@@ -231,7 +271,7 @@ export default {
       }
       for (let i = 0; i < 7; i++) {
         var curr = new Date;
-        var jour = curr.getDate() - curr.getDay() + i + 1;
+        var jour = curr.getDate() - curr.getDay() + i + 1 + ( this.week_choose * 7 );
         curr.setDate(jour);
         if (this.workingtimes!=undefined) {
           this.workingtimes.forEach(workingtime => {
@@ -294,7 +334,22 @@ export default {
 }
 </script>
 
-<style>
+<style> 
+.WorkingtimesUser .col-10 input{
+  width: 10em;
+  height: 1.5em;
+  margin-bottom: 0.5em;
+}
+.WorkingtimesUser .divdivchevron{
+  margin-top: -2em;
+}
+.WorkingtimesUser .chevron{
+  font-size: 1.5em;
+}
+.WorkingtimesUser .bla{
+  height: 3.5em;
+  width: 3.5em;
+}
 .WorkingtimesUser .modal-body input{
   background-color: #596869;
   color: #e7e7e7;;
@@ -341,7 +396,7 @@ export default {
   width: 4em;
 }
 .WorkingtimesUser table thead tr th.hours i {
-  font-size: 1em;
+  font-size: 1.5em;
 }
 .WorkingtimesUser table thead tr th:first-child {
   border-radius:3px 0 0 0;
@@ -351,9 +406,8 @@ export default {
 }
 .WorkingtimesUser table thead tr th .day {
   display: block;
-  font-size: 1.2em;
+  font-size: 1em;
   border-radius: 50%;
-  width: 30px;
   height: 30px;
   margin: 0 auto 5px;
   padding: 5px;

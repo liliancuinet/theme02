@@ -128,6 +128,7 @@
 </template>
 
 <script>
+import jwt_decode from "jwt-decode";
 export default {
   name: 'User',
   props: {},
@@ -148,9 +149,10 @@ export default {
     }
   },
   created() {
-    if (localStorage.user_role) {
-      this.user_role_connected = localStorage.user_role;
-      this.user_id_connected = localStorage.user_id;
+    if (localStorage.token) {
+      var decoded = jwt_decode(localStorage.token);
+      this.user_role_connected = decoded.user_role;
+      this.user_id_connected = decoded.user_id;
       if (this.user_role_connected!="user") {
         this.getUser();
       }
@@ -177,9 +179,7 @@ export default {
       this.email_input2 = this.user_current.email;
     },
     logout () {
-      delete localStorage.user_role;
       delete localStorage.token;
-      delete localStorage.user_id;
       this.$router.push("/login");
     },
     updateCurrentUser () {

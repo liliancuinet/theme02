@@ -29,6 +29,7 @@
 </template>
 
 <script>
+var sha256 = require('js-sha256').sha256;
 export default {
   name: 'Register',
   data () {
@@ -38,7 +39,7 @@ export default {
     }
   },
   beforeCreate() {
-    if (localStorage.user_role ) {
+    if (localStorage.token ) {
       this.$router.push("/");
     }
   },
@@ -47,9 +48,11 @@ export default {
       this.$router.push("/register")
     },
     login() {
+      sha256(this.pwd_input);
+      var hash = sha256.create();
       const object = { 
           "email": this.email_input,
-          "password": this.pwd_input
+          "password": hash.hex()
       };
       console.log(JSON.stringify(object));
       var myInit = { method: 'POST',
@@ -65,11 +68,9 @@ export default {
     },
     setResults (results) {
       if (results.token) {
-        localStorage.user_role = results.user_role;
-        localStorage.user_id = results.user_id;
         localStorage.token = results.token;
-        if (localStorage.user_role == "user") {
-          this.$router.push("/workingtimes/"+localStorage.user_id);
+        if (results.user_role == "user") {
+          this.$router.push("/workingtimes/"+results.user_id);
         }else{
           this.$router.push("/");
         }

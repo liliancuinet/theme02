@@ -5,12 +5,14 @@
 </template>
 
 <script>
+import jwt_decode from "jwt-decode";
 export default {
   created: function () {
-    if (localStorage.user_role) {
-      this.user_role_connected = localStorage.user_role;
-      this.user_id_connected = localStorage.user_id;
-      if (localStorage.user_role == "user") {
+    if (localStorage.token) {
+      var decoded = jwt_decode(localStorage.token);
+      this.user_role_connected = decoded.user_role;
+      this.user_id_connected = decoded.user_id;
+      if (this.user_role_connected == "user") {
         this.$router.push("/workingtimes/"+this.user_id_connected);
       }
     }else{
