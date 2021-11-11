@@ -34,6 +34,7 @@
 
 <script>
 var sha256 = require('js-sha256').sha256;
+import swal from 'sweetalert';
 export default {
   name: 'Register',
   data () {
@@ -43,7 +44,7 @@ export default {
       pwd_input: ""
     }
   },
-  beforeCreate() {
+  beforeMount() {
     if (localStorage.token) {
       this.$router.push("/");
     }
@@ -53,16 +54,13 @@ export default {
       this.$router.push("/login")
     },
     createUser() {
-      sha256(this.pwd_input);
-      var hash = sha256.create();
       const object = { "user": {
         "username": this.username_input,
         "email": this.email_input,
-        "password": hash.hex(),
+        "password": sha256(this.pwd_input),
         "role": "user"
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'POST',
         headers: {'Content-Type': 'application/json'},
         mode: 'cors',
@@ -70,13 +68,42 @@ export default {
         cache: 'default' };
       
       fetch("http://127.0.0.1:4000/api/users/", myInit)
-      .then(this.$router.push("/login"))
+      .then(res => {
+        return res;
+      })
+      .then(this.result)
+    },
+    result (res) {
+      if (res.ok) {
+        this.$router.push("/login");
+      }else{
+        swal("Error", "Information send are wrong", "error");
+      }
     }
   }
 }
 </script>
 
 <style>
+.swal-modal {
+  background-color: #39697b;
+  border: 1px solid #39697b;
+  
+}
+.swal-text {
+  color: #e7e7e7;
+}
+.swal-title {
+  color: #e7e7e7;
+}
+.swal-button {
+  background-color: #39697b;
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+  color: #e7e7e7;
+}
+.swal-button:hover {
+  background-color: #4f76a0;
+}
 .registerPage {
   height: 43em;
 }

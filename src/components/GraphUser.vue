@@ -17,7 +17,7 @@ export default {
       user_role_connected: ""
     }
   },
-  created: function () {
+  mounted: function () {
     if (localStorage.token) {
       var decoded = jwt_decode(localStorage.token);
       this.user_role_connected = decoded.user_role;

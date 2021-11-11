@@ -2,7 +2,7 @@
     <div class="userList">
       <div class="container deco d-flex justify-content-center align-items-center">
         <div class="row">
-          <div class="col-8" data-bs-toggle="modal" data-bs-target="#ModalUserUp">
+          <div class="col-8 pointer" data-bs-toggle="modal" data-bs-target="#ModalUserUp">
             {{ user_current.username }}
           </div>
           <div class="col-4 pointer" v-on:click="logout">
@@ -60,6 +60,7 @@
           </table>
         </div>
       </div>
+      <ClockUser v-if="user_role_connected == 'user'"/>
       <div class="modal fade" id="ModalUser" tabindex="-1" aria-labelledby="ModalUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -106,20 +107,20 @@
               <form>
                 <div class="mb-3">
                   <label for="username" class="form-label">Username :</label>
-                  <input type="text" class="form-control" id="username" v-model="email_input2" placeholder="username">
+                  <input type="text" class="form-control" id="username2" v-model="username_input2" placeholder="username">
                 </div>
                 <div class="mb-3">
                   <label for="email" class="form-label">Email :</label>
-                  <input type="text" class="form-control" id="email" v-model="email_input2" placeholder="email">
+                  <input type="text" class="form-control" id="email2" v-model="email_input2" placeholder="email">
                 </div>
                 <div class="mb-3">
-                  <label for="email" class="form-label">Password :</label>
-                  <input type="password" class="form-control" id="email" v-model="pwd_input" placeholder="email">
+                  <label for="password" class="form-label">Password :</label>
+                  <input type="password" class="form-control" id="password" v-model="pwd_input" placeholder="password">
                 </div>
               </form>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn" v-if="titleModal == 'Update'" v-on:click="updateCurrentUser">Update</button>
+              <button type="button" class="btn" v-on:click="updateCurrentUser">Update</button>
             </div>
           </div>
         </div>
@@ -129,9 +130,15 @@
 
 <script>
 import jwt_decode from "jwt-decode";
+var sha256 = require('js-sha256').sha256;
+import swal from 'sweetalert';
+import ClockUser from './ClockUser.vue';
 export default {
   name: 'User',
   props: {},
+  components: {
+    ClockUser
+  },
   data () {
     return {
       users: {},
@@ -148,7 +155,7 @@ export default {
       user_current: {}
     }
   },
-  created() {
+  mounted() {
     if (localStorage.token) {
       var decoded = jwt_decode(localStorage.token);
       this.user_role_connected = decoded.user_role;
@@ -184,13 +191,12 @@ export default {
     },
     updateCurrentUser () {
       const object = { "user": {
-        "username": this.username_input,
-        "email": this.email_input,
+        "username": this.username_input2,
+        "email": this.email_input2,
         "role": this.user_role_connected,
-        "password": this.pwd_input
+        "password": sha256(this.pwd_input)
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'PUT',
         headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
@@ -201,6 +207,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnClose2").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getUser)
     },
@@ -211,7 +219,6 @@ export default {
         "role": this.role_select
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'PUT',
         headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
@@ -222,6 +229,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnClose").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getUser)
     },
@@ -253,11 +262,10 @@ export default {
       const object = { "user": {
         "username": this.username_input,
         "email": this.email_input,
-        "password": "default",
+        "password": sha256("default"),
         "role": this.role_select
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
@@ -268,6 +276,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnClose").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getUser)
     },

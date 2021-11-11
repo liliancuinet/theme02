@@ -59,6 +59,7 @@
 <script>
 import jwt_decode from "jwt-decode";
 import Nav from "./Nav.vue";
+import swal from 'sweetalert';
 export default {
   name: 'WorkingTime',
   props: {},
@@ -77,7 +78,7 @@ export default {
       user_role_connected: ""
     }
   },
-  created: function () {
+  mounted: function () {
     if (localStorage.token) {
       var decoded = jwt_decode(localStorage.token);
       this.user_role_connected = decoded.user_role;
@@ -109,7 +110,6 @@ export default {
         "end": this.end_update_input
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'PUT',
         headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
@@ -120,6 +120,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnCloseWTU").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getWorkingTime)
     },
@@ -137,7 +139,6 @@ export default {
     },
     setUserResults (results) {
       this.user = results.data;
-      console.log(this.user);
     },
     getWorkingTime () {
 
@@ -159,7 +160,6 @@ export default {
       this.end_update_input = this.workingtime.end;
       this.workingtime.start = start.replace("T", " ");
       this.workingtime.end = end.replace("T", " ");
-      console.log(this.workingtime);
     },
     resetInput (){
       this.start_input = "";

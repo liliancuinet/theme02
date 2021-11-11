@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import swal from 'sweetalert';
 var sha256 = require('js-sha256').sha256;
 export default {
   name: 'Register',
@@ -38,7 +39,7 @@ export default {
       pwd_input: ""
     }
   },
-  beforeCreate() {
+  beforeMount() {
     if (localStorage.token ) {
       this.$router.push("/");
     }
@@ -48,13 +49,10 @@ export default {
       this.$router.push("/register")
     },
     login() {
-      sha256(this.pwd_input);
-      var hash = sha256.create();
       const object = { 
           "email": this.email_input,
-          "password": hash.hex()
+          "password": sha256(this.pwd_input)
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'POST',
         headers: {'Content-Type': 'application/json'},
         mode: 'cors',
@@ -74,6 +72,8 @@ export default {
         }else{
           this.$router.push("/");
         }
+      }else{
+        swal("Error", "Information send are wrong", "error");
       }
     }
   }

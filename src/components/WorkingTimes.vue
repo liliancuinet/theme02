@@ -1,6 +1,6 @@
 <template>
   <div class="WorkingtimesUser">
-    <Nav/>
+    <Nav v-if="user_role_connected != 'user'"/>
     <div class="ms-5 row" v-if="user_role_connected != 'user'">
       <div class="col-1 d-flex align-items-center divdivchevron">
         <div class="btn p-2 bd-highlight bla d-flex align-items-center justify-content-center" v-on:click="removeWeek">
@@ -43,7 +43,7 @@
           <tbody>
             <tr v-for="(row, index) in tableau" v-bind:key="index">
               <td class="hour"><span>{{ index }}:00</span></td>
-              <td v-for="(item, index2) in row" v-on:click="goToWT(item.id)" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
+              <td v-for="(item, index2) in row" v-on:click="goToWT(item.id, $event)" :id="index+'-'+index2" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
                 <span> {{ item.data }} </span>
               </td>
             </tr>
@@ -56,58 +56,56 @@
         </div>
       </div>
     </div>
-    <div class="ms-5" v-if="user_role_connected == 'user'">
-      <table>
-        <thead>
-          <tr>
-            <th class="hours">
-            </th>
-            <th>
-              <span class="day">{{ date[0] }}</span>
-              <span class="long">Monday</span>
-              <span class="short">Mon</span>
-            </th>
-            <th>
-              <span class="day">{{ date[1] }}</span>
-              <span class="long">Tuesday</span>
-              <span class="short">Tue</span>
-            </th>
-            <th>
-              <span class="day">{{ date[2] }}</span>
-              <span class="long">Wednesday</span>
-              <span class="short">We</span>
-            </th>
-            <th>
-              <span class="day">{{ date[3] }}</span>
-              <span class="long">Thursday</span>
-              <span class="short">Thur</span>
-            </th>
-            <th>
-              <span class="day">{{ date[4] }}</span>
-              <span class="long">Friday</span>
-              <span class="short">Fri</span>
-            </th>
-            <th>
-              <span class="day">{{ date[5] }}</span>
-              <span class="long">Saturday</span>
-              <span class="short">Sat</span>
-            </th>
-            <th>
-              <span class="day">{{ date[6] }}</span>
-              <span class="long">Sunday</span>
-              <span class="short">Sun</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in tableau" v-bind:key="index">
-            <td class="hour"><span>{{ index }}:00</span></td>
-            <td v-for="(item, index2) in row" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
-              <span> {{ item.data }} </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="ms-5 mt-5 row" v-if="user_role_connected == 'user'">
+      <div class="col-1 d-flex align-items-center divdivchevron">
+        <div class="btn p-2 bd-highlight bla d-flex align-items-center justify-content-center" v-on:click="removeWeek">
+          <i class="fas fa-chevron-circle-left chevron" style="color: #e7e7e7"></i>
+        </div>
+      </div>
+      <div class="col-10">
+        <input type="date" class="form-control" v-on:change="selectWeek" v-model="calendar_choose">
+        <table>
+          <thead>
+            <tr>
+              <th class="hours"></th>
+              <th>
+                <span class="day">Mon {{ date[0] }}</span>
+              </th>
+              <th>
+                <span class="day">Tue {{ date[1] }}</span>
+              </th>
+              <th>
+                <span class="day">We {{ date[2] }}</span>
+              </th>
+              <th>
+                <span class="day">Thur {{ date[3] }}</span>
+              </th>
+              <th>
+                <span class="day">Fri {{ date[4] }}</span>
+              </th>
+              <th>
+                <span class="day">Sat {{ date[5] }}</span>
+              </th>
+              <th>
+                <span class="day">Sun {{ date[6] }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in tableau" v-bind:key="index">
+              <td class="hour"><span>{{ index }}:00</span></td>
+              <td v-for="(item, index2) in row" v-bind:key="index2" v-bind:class="{ 'working': item.bool }">
+                <span> {{ item.data }} </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="col-1 d-flex align-items-center divdivchevron">
+        <div class="btn p-2 bd-highlight bla d-flex align-items-center justify-content-center" v-on:click="addWeek">
+          <i class="fas fa-chevron-circle-right chevron" style="color: #e7e7e7"></i>
+        </div>
+      </div>
     </div>
     <div class="modal fade" id="ModalWorkingTime" tabindex="-1" aria-labelledby="ModalUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -124,7 +122,7 @@
                 </div>
                 <div class="mb-3">
                   <label for="startend" class="form-label">End :</label>
-                  <input type="datetime-local" class="form-control" id="startend" v-model="end_input">
+                  <input type="datetime-local" class="form-control" id="startend" v-model="end_input" :min="start_input">
                 </div>
               </form>
             </div>
@@ -141,6 +139,7 @@
 <script>
 import jwt_decode from "jwt-decode";
 import Nav from "./Nav.vue";
+import swal from 'sweetalert';
 export default {
   name: 'WorkingTimes',
   props: {},
@@ -168,7 +167,6 @@ export default {
       this.user_id_connected = decoded.user_id;
       if (this.user_role_connected == "user" && this.$route.params.userId != this.user_id_connected) {
         this.$router.push("/workingtimes/"+this.user_id_connected);
-        console.log("ICI");
       }
       this.getWorkingTimes();
       this.reload = 0;
@@ -186,12 +184,15 @@ export default {
     selectWeek () {
       var selectdate = new Date(this.calendar_choose);
       var first1 = selectdate.getDate() - selectdate.getDay() + 1
+      var sunday = false;
+      if (selectdate.getDay() == 0) {
+        sunday = true;
+      }
       var now = new Date;
       var first2 = now.getDate() - now.getDay() + 1
       var selectdate2 = new Date(selectdate.setDate(first1))
       var now2 = new Date(now.setDate(first2))
       let diffInMilliSeconds = (selectdate2 - now2) / 1000;
-      console.log(diffInMilliSeconds);
       if (diffInMilliSeconds>=0) {
         const week = Math.floor(diffInMilliSeconds / 86400) % 6;
         diffInMilliSeconds -= week*86400
@@ -201,8 +202,10 @@ export default {
         const week = Math.floor(diffInMilliSeconds / 86400) % 6;
         diffInMilliSeconds -= week*86400
         var week2 = Math.floor(diffInMilliSeconds / 86400) / 6;
-        console.log(week2);
         this.week_choose = week2;
+      }
+      if (sunday) {
+        this.week_choose = this.week_choose - 1;
       }
       this.getWorkingTimes();
     },
@@ -214,18 +217,28 @@ export default {
       this.week_choose = this.week_choose - 1;
       this.getWorkingTimes();
     },
-    goToWT (wtId) {
+    goToWT (wtId, event) {
       if (wtId!=-1) {
         this.$router.push({ path: `/workingtime/${this.$route.params.userId}/${wtId}` })
       }else{
+        var id = (event.target.id).split("-");
+        var jour = this.date[parseInt(id[1])].split("/")[0];
+        var mois = this.date[parseInt(id[1])].split("/")[1];
+        if (id[0] < 10) {
+          id[0] = "0" + id[0];
+        }
+        this.start_input = "2021-"+mois+"-"+jour+"T"+id[0]+":00";
         document.getElementById("openModalWTN").click();
       }
     },
     getWorkingTimes () {
       var curr = new Date;
       var curr2 = new Date; // get current date
-      var first = curr.getDate() - curr.getDay() + 1 + ( this.week_choose * 7 ); // First day is the day of the month - the day of the week
-      var last = curr.getDate() - curr.getDay() + 7 + ( this.week_choose * 7 ); // last day is the first day + 6
+      var first = null;
+      var last = null
+      first = curr.getDate() - curr.getDay() + 1 + ( this.week_choose * 7 ); // First day is the day of the month - the day of the week
+      last = curr.getDate() - curr.getDay() + 7 + ( this.week_choose * 7 ); // last day is the first day + 6
+
       this.date = new Array(7);
 
       for (let i = 1; i < 8; i++) {
@@ -316,7 +329,6 @@ export default {
         "end": this.end_input+":00"
         }
       };
-      console.log(object);
       var myInit = { method: 'POST',
         headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
@@ -327,6 +339,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnCloseWT").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getWorkingTimes)
     }

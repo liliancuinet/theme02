@@ -1,25 +1,21 @@
 <template>
-  <div class="ClockManager">
-    <Nav/>
-    <div class="row ms-5 d-flex justify-content-center">
-      <div class="col-4 d-flex align-items-center justify-content-center">
-        <div>
-          {{ timeDiff }}
-        </div>
-      </div>
-      <div class="col-4">
-        <p class="btn py-3 pointer" v-if="!clockIn"  v-on:click="clock">Start your day</p>
-        <p class="btn py-3 pointer" v-if="clockIn"  v-on:click="clock">Finish your day</p>
+  <div class="ClockUser">
+    <div class="row my-4 d-flex justify-content-center">
+      <div>
+        {{ timeDiff }}
       </div>
     </div>
-    <div class="ms-5">
+    <div class="row px-5 d-flex justify-content-center">
+      <p class="btn py-3 pointer" v-if="!clockIn"  v-on:click="clock">Start your day</p>
+      <p class="btn py-3 pointer" v-if="clockIn"  v-on:click="clock">Finish your day</p>
+    </div>
+    <div class="mx-5">
       <div class="tabClock">
         <table class="table">
           <thead>
             <tr>
               <th scope="col">Date / Hours</th>
               <th scope="col">Status</th>
-              <th scope="col">Delete</th>
             </tr>
           </thead>
           <tbody>
@@ -37,11 +33,6 @@
                   Finished
                 </div>
               </td>
-              <td class="ps-0 pe-0">
-                <div style="height:100%;width:100%" class="pointer" v-on:click="deleteClock(clock.id)">
-                  <i class="fas fa-trash"></i>
-                </div>
-              </td>
             </tr>
           </tbody>
         </table>
@@ -52,10 +43,8 @@
 
 <script>
 import jwt_decode from "jwt-decode";
-import Nav from './Nav.vue'
 export default {
-  name: 'Clock',
-  components: { Nav },
+  name: 'ClockUser',
   data () {
     return {
       clocks: {},
@@ -77,22 +66,9 @@ export default {
           this.refresh();
         }
       }, 100)
-    }else{
-      this.$router.push("/login");
     }
   },
   methods: {
-    deleteClock (clockId) {
-      var myInit = { method: 'DELETE',
-        headers: { 'Authorization': localStorage.token },
-        mode: 'cors',
-        cache: 'default' };
-
-      fetch("http://127.0.0.1:4000/api/clocks/"+clockId, myInit)
-      .then(res => {
-          return res;
-        }).then(this.getClocks);
-    },
     getClocks () {
       var myInit = { method: 'GET',
         headers: { 'Authorization': localStorage.token },
@@ -167,42 +143,42 @@ export default {
 </script>
 
 <style>
-.ClockManager .btn{
+.ClockUser .btn{
   box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
   color: #e7e7e7;
   background-color: #39697b;
 }
-.ClockManager .btn:hover{
+.ClockUser .btn:hover{
   background-color: #4f76a0;
 }
-.ClockManager tbody {
+.ClockUser tbody {
   display: block;
   overflow-y: auto;
   overflow-x: hidden;
   height: 30em;
 }
-.ClockManager thead {
+.ClockUser thead {
   width: calc( 100% - 1em );
   display: table;
   width: 100%;
   table-layout: fixed;
 }
-.ClockManager tbody tr {
+.ClockUser tbody tr {
   display: table;
   width: 100%;
   table-layout: fixed;/* even columns width , fix width of table too*/
 }
-.ClockManager tbody::-webkit-scrollbar-track
+.ClockUser tbody::-webkit-scrollbar-track
 {
 	border-radius: 10px;
 	background-color: #1e4753;
 }
-.ClockManager tbody::-webkit-scrollbar
+.ClockUser tbody::-webkit-scrollbar
 {
 	width: 9px;
 	background-color: #1e4753;
 }
-.ClockManager tbody::-webkit-scrollbar-thumb
+.ClockUser tbody::-webkit-scrollbar-thumb
 {
 	border-radius: 10px;
   box-shadow: inset 0 0 6px rgba(0,0,0,.3);
@@ -212,22 +188,22 @@ export default {
 .pointer{
   cursor: pointer;
 }
-.ClockManager .link-graph-user{
+.ClockUser .link-graph-user{
   text-decoration: none;
   color: #e7e7e7;
   width: auto;
 }
-.ClockManager .table{
+.ClockUser .table{
   color: #e7e7e7;
 }
-.ClockManager td,th {
+.ClockUser td,th {
   border-style: none;
 }
-.ClockManager thead {
+.ClockUser thead {
   border-bottom-style: solid;
   border-bottom-width: 1px;
 }
-.ClockManager tbody tr:hover{
+.ClockUser tbody tr:hover{
   background-color: #4f76a0;
 }
 </style>
