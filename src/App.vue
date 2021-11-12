@@ -5,7 +5,7 @@
     </div>
     <div class="row" v-if="!isLoginpath()">
       <div class="col-9">
-        <router-view></router-view>
+        <router-view :key="$route.fullPath"></router-view>
       </div>
       <div class="col-3 d-flex justify-content-end">
         <User/>

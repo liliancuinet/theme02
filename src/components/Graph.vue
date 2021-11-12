@@ -1,43 +1,45 @@
 <template>
-  <div class="content">
-    <div class="md-layout">
-      <h2>Dashboard</h2>
-      <div
-        class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
-      >
-        <h3>Heures cumulées par utilisateurs</h3>
+  <div class="d-flex align-items-center justify-content-center">
+    <div class="content">
+      <div class="md-layout">
+        <h2>Dashboard</h2>
+        <div
+          class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
+        >
+          <h3>Heures cumulées par utilisateurs</h3>
 
-        <teamGraph1
-          v-if="loaded"
-          v-bind:labels="labels"
-          v-bind:datas="datas"
-          v-bind:average="average"
-        />
-      </div>
-      <br />
-      <div
-        class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
-      >
-        <h3>Jours de la semaine les plus travaillés</h3>
+          <teamGraph1
+            v-if="loaded"
+            v-bind:labels="labels"
+            v-bind:datas="datas"
+            v-bind:average="average"
+          />
+        </div>
+        <br />
+        <div
+          class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
+        >
+          <h3>Jours de la semaine les plus travaillés</h3>
 
-        <teamGraph2
-          v-if="loaded"
-          v-bind:datas="datas2"
-          v-bind:average="average2"
-        />
-      </div>
-      <br />
+          <teamGraph2
+            v-if="loaded"
+            v-bind:datas="datas2"
+            v-bind:average="average2"
+          />
+        </div>
+        <br />
 
-      <div
-        class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
-      >
-        <h3>Top 3 des travailleurs</h3>
+        <div
+          class="md-layout-item md-medium-size-100 md-xsmall-size-100 md-size-33"
+        >
+          <h3>Top 3 des travailleurs</h3>
 
-        <teamGraph3
-          v-if="loaded"
-          v-bind:labelPie="labelPie"
-          v-bind:dataPie="dataPie"
-        />
+          <teamGraph3
+            v-if="loaded"
+            v-bind:labelPie="labelPie"
+            v-bind:dataPie="dataPie"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -199,7 +201,6 @@ export default {
       // CONSTRUCTION DE LA "PIE"
       this.dataPie = top3;
       this.labelPie = top3userName;
-      console.log(this.dataPie, this.labelPie);
 
       // CONSTRUCTION DU SECOND GRAPHIQUE, JOUR LES PLUS TRAVAILLÉS
 
