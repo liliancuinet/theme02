@@ -35,7 +35,7 @@ export default {
       
       fetch("http://127.0.0.1:4000/api/verif", myInit)
       .then(res => {
-          if (res.status == 400) {
+          if (res.status == 401) {
             delete localStorage.token;
           }
         })
