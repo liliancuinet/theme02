@@ -1,6 +1,16 @@
 <template>
     <div class="userList">
-      <div class="container m-4">
+      <div class="container deco d-flex justify-content-center align-items-center">
+        <div class="row">
+          <div class="col-8 pointer" data-bs-toggle="modal" data-bs-target="#ModalUserUp">
+            {{ user_current.username }}
+          </div>
+          <div class="col-4 pointer" v-on:click="logout">
+            <i class="fas fa-sign-out-alt"></i>
+          </div>
+        </div>
+      </div>
+      <div class="container m-4" v-if="user_role_connected != 'user'">
         <div class="row d-flex justify-content-center mt-3">
           <div class="col-6">
             <router-link :to="'/'" class="btn py-3">Dashboard</router-link>
@@ -19,7 +29,7 @@
             <thead>
               <tr>
                 <th scope="col">Username</th>
-                <th scope="col" colspan="2">Options</th>
+                <th scope="col">Options</th>
               </tr>
             </thead>
             <tbody>
@@ -31,25 +41,26 @@
                     </div>
                   </router-link>
                 </td>
-                <td class="ps-0 pe-0">
-                  <a href="#" class="link-graph-user">
-                    <div style="height:100%;width:100%" data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="editUser(user.id)">
-                      <i class="far fa-edit"></i>
-                    </div>
-                  </a>
-                </td>
-                <td class="ps-0 pe-0">
-                  <a href="#" class="link-graph-user">
-                    <div style="height:100%;width:100%" v-on:click="deleteUser(user.id)">
-                      <i class="fas fa-trash"></i>
-                    </div>
-                  </a>
+                <td>
+                  <div class="row ps-3 d-flex justify-content-center">
+                    <a href="#" class="link-graph-user">
+                      <div data-bs-toggle="modal" data-bs-target="#ModalUser" v-on:click="editUser(user.id)">
+                        <i class="far fa-edit"></i>
+                      </div>
+                    </a>
+                    <a href="#" class="link-graph-user">
+                      <div v-on:click="deleteUser(user.id)">
+                        <i class="fas fa-trash"></i>
+                      </div>
+                    </a>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+      <ClockUser v-if="user_role_connected == 'user'"/>
       <div class="modal fade" id="ModalUser" tabindex="-1" aria-labelledby="ModalUserLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
@@ -67,6 +78,14 @@
                   <label for="email" class="form-label">Email :</label>
                   <input type="text" class="form-control" id="email" v-model="email_input" placeholder="email">
                 </div>
+                <div class="mb-3">
+                  <label for="role" class="form-label">Select a role :</label>
+                  <select class="form-select" aria-label="Default select example"  v-model="role_select">
+                    <option value="user">User</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Administrator</option>
+                  </select>
+                </div>
               </form>
             </div>
             <div class="modal-footer">
@@ -77,35 +96,131 @@
           </div>
         </div>
       </div>
+      <div class="modal fade" id="ModalUserUp" tabindex="-1" aria-labelledby="ModalUserUPLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="ModalUserLabel">Update my profile</h5>
+              <button type="button" id="modalBtnClose2" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form>
+                <div class="mb-3">
+                  <label for="username" class="form-label">Username :</label>
+                  <input type="text" class="form-control" id="username2" v-model="username_input2" placeholder="username">
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email :</label>
+                  <input type="text" class="form-control" id="email2" v-model="email_input2" placeholder="email">
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password :</label>
+                  <input type="password" class="form-control" id="password" v-model="pwd_input" placeholder="password">
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn" v-on:click="updateCurrentUser">Update</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 </template>
 
 <script>
+import jwt_decode from "jwt-decode";
+var sha256 = require('js-sha256').sha256;
+import swal from 'sweetalert';
+import ClockUser from './ClockUser.vue';
 export default {
   name: 'User',
   props: {},
+  components: {
+    ClockUser
+  },
   data () {
     return {
       users: {},
       titleModal: "Create",
       email_input: "",
       username_input: "",
-      id_input: -1
+      email_input2: "",
+      username_input2: "",
+      pwd_input: "",
+      role_select: "",
+      id_input: -1,
+      user_id_connected: -1,
+      user_role_connected: "",
+      user_current: {}
     }
   },
-  created: function () {
-    this.getUser();
+  mounted() {
+    if (localStorage.token) {
+      var decoded = jwt_decode(localStorage.token);
+      this.user_role_connected = decoded.user_role;
+      this.user_id_connected = decoded.user_id;
+      if (this.user_role_connected!="user") {
+        this.getUser();
+      }
+      this.getCurrentUser();
+    }else{
+      this.$router.push("/login");
+    }
   },
   methods: {
+    getCurrentUser() {
+      var myInit = { method: 'GET',
+      headers: {'Authorization': localStorage.token},
+      mode: 'cors',
+      cache: 'default' };
+
+      fetch("http://127.0.0.1:4000/api/users/"+this.user_id_connected, myInit)
+        .then(res => {
+          return res.json();
+        }).then(this.setResults2);
+    },
+    setResults2 (results) {
+      this.user_current = results.data;
+      this.username_input2 = this.user_current.username;
+      this.email_input2 = this.user_current.email;
+    },
+    logout () {
+      delete localStorage.token;
+      this.$router.push("/login");
+    },
+    updateCurrentUser () {
+      const object = { "user": {
+        "username": this.username_input2,
+        "email": this.email_input2,
+        "role": this.user_role_connected,
+        "password": sha256(this.pwd_input)
+        }
+      };
+      var myInit = { method: 'PUT',
+        headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
+        mode: 'cors',
+        body: JSON.stringify(object),
+        cache: 'default' };
+      
+      fetch("http://127.0.0.1:4000/api/users/"+this.user_id_connected, myInit)
+      .then(res => {
+          if (res.ok) {
+            document.getElementById("modalBtnClose2").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
+          }
+        }).then(this.getUser)
+    },
     updateUser () {
       const object = { "user": {
         "username": this.username_input,
-        "email": this.email_input
+        "email": this.email_input,
+        "role": this.role_select
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
         body: JSON.stringify(object),
         cache: 'default' };
@@ -114,6 +229,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnClose").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getUser)
     },
@@ -122,30 +239,35 @@ export default {
       this.id_input = userId;
       var username;
       var email;
+      var role;
       this.users.forEach(function(user){
         if (user.id == userId) {
           username = user.username;
           email = user.email;
+          role = user.role;
         }
       });
       this.username_input = username;
       this.email_input = email;
+      this.role_select = role;
     },
     addUser () {
       this.username_input = "";
       this.email_input = "";
+      this.role_select = "user";
       this.id_input = -1;
       this.titleModal = "Create"
     },
     createUser () {
       const object = { "user": {
         "username": this.username_input,
-        "email": this.email_input
+        "email": this.email_input,
+        "password": sha256("default"),
+        "role": this.role_select
         }
       };
-      console.log(JSON.stringify(object));
       var myInit = { method: 'POST',
-        headers: {'Content-Type': 'application/json'},
+        headers: {'Content-Type': 'application/json', 'Authorization': localStorage.token},
         mode: 'cors',
         body: JSON.stringify(object),
         cache: 'default' };
@@ -154,6 +276,8 @@ export default {
       .then(res => {
           if (res.ok) {
             document.getElementById("modalBtnClose").click()
+          }else{
+            swal("Error", "Information send are wrong", "error");
           }
         }).then(this.getUser)
     },
@@ -162,20 +286,18 @@ export default {
       this.username_input = "";
     },
     deleteUser (userId) {
-      var myHeaders = new Headers();
 
       var myInit = { method: 'DELETE',
-        headers: myHeaders,
+        headers: {'Authorization': localStorage.token},
         mode: 'cors',
         cache: 'default' };
 
       fetch("http://127.0.0.1:4000/api/users/"+userId, myInit).then(this.getUser);
     },
     getUser () {
-      var myHeaders = new Headers();
 
       var myInit = { method: 'GET',
-        headers: myHeaders,
+        headers: {'Authorization': localStorage.token},
         mode: 'cors',
         cache: 'default' };
 
@@ -186,44 +308,60 @@ export default {
     },
     setResults (results) {
       this.users = results.data;
-      console.log(this.users);
     }
   }
 }
 </script>
 
 <style >
+.userList .deco{
+  height: 3em !important;
+}
 .userList .link-graph-user{
   text-decoration: none;
   color: #e7e7e7;
+  width: auto;
 }
-.userList .tabUser::-webkit-scrollbar-track
+.userList tbody {
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 29em;
+}
+.userList thead {
+  width: calc( 100% - 1em );
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+.userList tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;/* even columns width , fix width of table too*/
+}
+.userList tbody::-webkit-scrollbar-track
 {
 	border-radius: 10px;
 	background-color: #39697b;
 }
 
-.userList .tabUser::-webkit-scrollbar
+.userList tbody::-webkit-scrollbar
 {
 	width: 9px;
 	background-color: #39697b;
 }
 
-.userList .tabUser::-webkit-scrollbar-thumb
+.userList tbody::-webkit-scrollbar-thumb
 {
 	border-radius: 10px;
   box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 	background-color: #296172;
 }
-.userList .tabUser{
-  overflow-y: auto;
-  height: 33em;
-}
 .userList .container{
   background-color: #39697b;
   width: 20em;
-  height: 44em;
+  height: 42em;
   border: solid 2px #39697b;
 }
 .userList .btn{
@@ -258,10 +396,14 @@ export default {
 }
 .userList .modal-body input{
   background-color: #596869;
-  color: #e7e7e7;;
+  color: #e7e7e7;
 }
 .userList .modal-body ::placeholder{
   color: #e7e7e7;
   opacity: 0.6;
+}
+.userList .modal-body select{
+  background-color: #596869;
+  color: #e7e7e7;
 }
 </style>

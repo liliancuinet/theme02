@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <div class="row">
+    <div v-if="isLoginpath()">
+      <router-view></router-view>
+    </div>
+    <div class="row" v-if="!isLoginpath()">
       <div class="col-9">
         <router-view></router-view>
       </div>
@@ -18,6 +21,34 @@ export default {
   name: 'App',
   components: {
     User
+  },
+  created() {
+    if (localStorage.token) {
+      const object = {
+        "token": localStorage.token
+      };
+      var myInit = { method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        mode: 'cors',
+        body: JSON.stringify(object),
+        cache: 'default' };
+      
+      fetch("http://127.0.0.1:4000/api/verif", myInit)
+      .then(res => {
+          if (res.status == 400) {
+            delete localStorage.token;
+          }
+        })
+    }
+  },
+  methods: {
+    isLoginpath () {
+      if (this.$route.path === '/login' || this.$route.path === '/register') {
+        return true;
+      }else{
+        return false;
+      }
+    }
   }
 }
 </script>
